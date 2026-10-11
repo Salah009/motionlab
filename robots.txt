@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://motionlab.salahtoubdarin.workers.dev/sitemap.xml
