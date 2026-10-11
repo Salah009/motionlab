@@ -110,6 +110,9 @@ footer{padding:25px 5%;border-top:1px solid var(--soft);display:flex;justify-con
         <option value="survivor">Last survivor</option>
         <option value="domino">Domino wave</option>
         <option value="fountain">Particle fountain</option>
+        <option value="rps">Rock, paper, scissors</option>
+        <option value="infect">Outbreak</option>
+        <option value="marble">Marble race</option>
       </select>
 
       <label for="hook">Video title (hook) <b id="hv"></b></label>
@@ -188,6 +191,9 @@ footer{padding:25px 5%;border-top:1px solid var(--soft);display:flex;justify-con
     <button class="idea" data-preset="survivor"><small>04 / SURVIVAL</small><span class="art"><i></i><i></i><i></i><i></i></span><b>Last Survivor</b><small>Balls escape through a widening gap. One is left.</small></button>
     <button class="idea" data-preset="domino"><small>05 / CHAIN REACTION</small><span class="art"><i></i><i></i><i></i><i></i></span><b>Domino Wave</b><small>Each block topples the next, with a click for every fall.</small></button>
     <button class="idea" data-preset="fountain"><small>06 / PARTICLES</small><span class="art"><i></i><i></i><i></i><i></i></span><b>Particle Fountain</b><small>Launch, bounce, repeat. Every bounce plays a note.</small></button>
+    <button class="idea" data-preset="rps"><small>07 / TRIBES</small><span class="art"><i></i><i></i><i></i><i></i></span><b>Rock, Paper, Scissors</b><small>Every collision converts the loser. One tribe takes over.</small></button>
+    <button class="idea" data-preset="infect"><small>08 / OUTBREAK</small><span class="art"><i></i><i></i><i></i><i></i></span><b>Outbreak</b><small>One sick ball. Every touch can spread it to the rest.</small></button>
+    <button class="idea" data-preset="marble"><small>09 / PEGBOARD</small><span class="art"><i></i><i></i><i></i><i></i></span><b>Marble Race</b><small>Marbles tumble down a peg board. First to the bottom wins.</small></button>
   </div>
 </section>
 
@@ -438,6 +444,35 @@ function drawOverlay(){
   x.globalAlpha=1;x.textAlign='left';
 }
 
+/* hand-drawn rock / paper / scissors icons (vector, so they render the same everywhere) */
+function rpsIcon(k,px,py,r){
+  const dark='#1b1b22';
+  x.save();x.translate(px,py);x.scale(r*.72,r*.72);
+  x.lineCap='round';x.lineJoin='round';x.shadowBlur=0;
+  if(k===0){            /* rock */
+    x.beginPath();
+    [[-.95,.35],[-.75,-.45],[-.2,-.9],[.5,-.75],[.95,-.05],[.65,.75],[-.25,.9]].forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1]));
+    x.closePath();x.fillStyle=dark;x.fill();
+    x.beginPath();x.moveTo(-.45,-.35);x.lineTo(-.05,-.62);x.lineTo(.3,-.45);
+    x.strokeStyle='#ffffff55';x.lineWidth=.14;x.stroke();
+  }else if(k===1){      /* paper */
+    x.beginPath();
+    [[-.7,-.95],[.28,-.95],[.7,-.52],[.7,.95],[-.7,.95]].forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1]));
+    x.closePath();x.fillStyle='#fff';x.fill();x.strokeStyle=dark;x.lineWidth=.16;x.stroke();
+    x.beginPath();x.moveTo(.28,-.95);x.lineTo(.28,-.52);x.lineTo(.7,-.52);x.stroke();
+    x.lineWidth=.13;
+    for(const yy of[-.15,.2,.55]){x.beginPath();x.moveTo(-.4,yy);x.lineTo(.4,yy);x.stroke()}
+  }else{                /* scissors */
+    x.strokeStyle=dark;x.lineWidth=.24;
+    x.beginPath();x.moveTo(.72,-.95);x.lineTo(-.42,.55);x.stroke();
+    x.beginPath();x.moveTo(-.72,-.95);x.lineTo(.42,.55);x.stroke();
+    x.lineWidth=.17;
+    x.beginPath();x.arc(-.5,.72,.3,0,Math.PI*2);x.stroke();
+    x.beginPath();x.arc(.5,.72,.3,0,Math.PI*2);x.stroke();
+  }
+  x.restore();
+}
+
 /* ---------- presets ---------- */
 const P={
   grow:{
@@ -637,6 +672,136 @@ const P={
       for(const b of objs)if(b.active)dot(b);
     },
     counter(){return[{t:'BOUNCES '+sim.bounces}]}
+  },
+  rps:{
+    title:'Rock, Paper, Scissors: who survives?',
+    uses:['count','speed','size','palette'],
+    init(){
+      const n=Math.max(6,s.count),r=Math.min(s.size*2.5,Math.sqrt(.25*R*R/n));
+      objs=[];
+      for(let i=0;i<n;i++){const b=spawn(i,r);b.sp=2.2;b.k=i%3;b.color=col(b.k);objs.push(b)}
+      sim.names=['ROCK','PAPER','SCISSORS'];sim.conv=0;
+    },
+    step(h){
+      for(const b of objs){move(b,h);if(wallHit(b)){sim.bounces++;blip(sim.bounces,.05)}keepSpeed(b)}
+      for(let i=0;i<objs.length;i++)for(let j=i+1;j<objs.length;j++){
+        const a=objs[i],b=objs[j];
+        if(collide(a,b)&&a.k!==b.k){
+          const w=(a.k-b.k+3)%3===1?a:b,l=w===a?b:a;
+          l.k=w.k;l.color=col(w.k);sim.conv++;
+          blip(sim.conv,.14,'triangle');burst(l.x,l.y,l.color,6,2.2);ripple(l.x,l.y,l.color,l.r);
+        }
+      }
+      const k0=objs[0].k;
+      if(objs.every(b=>b.k===k0))end(sim.names[k0]+' WINS!',col(k0));
+    },
+    draw(){
+      ring();
+      for(const b of objs){dot(b);rpsIcon(b.k,b.x,b.y,b.r)}
+    },
+    counter(){return[0,1,2].map(k=>({t:sim.names[k]+' '+objs.filter(b=>b.k===k).length,c:col(k)}))}
+  },
+  infect:{
+    title:'One infected ball. How long until everyone?',
+    uses:['count','speed','size'],
+    init(){
+      const n=Math.max(6,Math.min(80,s.count*2)),r=Math.min(s.size*.9,Math.sqrt(.25*R*R/n));
+      objs=[];
+      for(let i=0;i<n;i++){const b=spawn(i,r);b.sp=3.2;b.inf=i===0;b.color=i===0?'#ff4d5e':'#7cf0d4';objs.push(b)}
+      sim.n=n;sim.sick=1;
+    },
+    step(h){
+      for(const b of objs){move(b,h);wallHit(b);keepSpeed(b)}
+      for(let i=0;i<objs.length;i++)for(let j=i+1;j<objs.length;j++){
+        const a=objs[i],b=objs[j];
+        if(collide(a,b)&&a.inf!==b.inf&&rng()<.3){
+          const v=a.inf?b:a;
+          v.inf=true;v.color='#ff4d5e';sim.sick++;
+          blip(sim.sick,.16,'triangle');burst(v.x,v.y,'#ff4d5e',8,2.5);ripple(v.x,v.y,'#ff4d5e',v.r);
+        }
+      }
+      if(sim.sick>=sim.n)end('ALL '+sim.n+' INFECTED!','#ff4d5e');
+    },
+    draw(){
+      ring();
+      for(const b of objs){
+        dot(b);
+        if(b.inf){
+          x.globalAlpha=.45;x.beginPath();x.arc(b.x,b.y,b.r+3+2*Math.sin(sim.t*.15),0,Math.PI*2);
+          x.strokeStyle='#ff4d5e';x.lineWidth=1.5;x.stroke();x.globalAlpha=1;
+        }
+      }
+    },
+    counter(){return[{t:'INFECTED '+sim.sick+' / '+sim.n,c:'#ff4d5e'}]}
+  },
+  marble:{
+    title:'Marble race: who reaches the bottom first?',
+    uses:['count','speed','size','palette'],
+    init(){
+      const n=Math.max(4,Math.min(40,s.count)),r=Math.max(4,Math.min(s.size*.95,11));
+      const lo=c.width*.07,hi=c.width*.93,top=c.height*.25,bot=cy+R*.98,sp=2*r+12,rowH=sp*.86;
+      sim.lo=lo;sim.hi=hi;sim.top=top;sim.fin=bot;sim.pr=4;sim.rowH=rowH;sim.pegs=[];sim.finished=0;
+      const rows=Math.max(3,Math.floor((bot-30-top)/rowH));
+      let pi=0;
+      for(let ri=0;ri<rows;ri++){
+        const y=top+ri*rowH,off=ri%2?sp/2:0,row=[];
+        for(let px=lo+sp/2+off;px<hi-sp/4;px+=sp)row.push({x:px,y,i:pi++,flash:0});
+        sim.pegs.push(row);
+      }
+      objs=[];
+      const cols=Math.max(1,Math.min(n,Math.floor((hi-lo)/(2*r+3))));
+      for(let i=0;i<n;i++){
+        const ci=i%cols,ri=Math.floor(i/cols);
+        objs.push({x:lo+(hi-lo)*(ci+.5)/cols+(rng()-.5)*3,y:top-r*2-ri*(2*r+3)-6,vx:(rng()-.5)*.6,vy:0,r,color:col(i),id:i+1,fin:false});
+      }
+    },
+    step(h){
+      const g=.055,e=.4,pr=sim.pr;
+      for(const b of objs){
+        if(b.fin)continue;
+        b.vy+=g*h;b.vx*=1-.002*h;b.x+=b.vx*h;b.y+=b.vy*h;
+        if(b.x<sim.lo+b.r){b.x=sim.lo+b.r;b.vx=Math.abs(b.vx)*.6}
+        else if(b.x>sim.hi-b.r){b.x=sim.hi-b.r;b.vx=-Math.abs(b.vx)*.6}
+        const ri=Math.round((b.y-sim.top)/sim.rowH);
+        for(let q=ri-1;q<=ri+1;q++){
+          const row=sim.pegs[q];if(!row)continue;
+          for(const p of row){
+            const dx=b.x-p.x,dy=b.y-p.y,m=b.r+pr;
+            if(dx>m||dx<-m||dy>m||dy<-m)continue;
+            const d=Math.hypot(dx,dy);
+            if(d>=m)continue;
+            const nx=d?dx/d:0,ny=d?dy/d:-1;
+            b.x=p.x+nx*m;b.y=p.y+ny*m;
+            const vn=b.vx*nx+b.vy*ny;
+            if(vn<0){
+              b.vx-=(1+e)*vn*nx;b.vy-=(1+e)*vn*ny;b.vx+=(rng()-.5)*.5;
+              if(-vn>.6){p.flash=1;sim.bounces++;blip(p.i,.1);burst(p.x+nx*pr,p.y+ny*pr,b.color,2,1.3)}
+            }
+          }
+        }
+        if(b.y>sim.fin){b.fin=true;b.y=sim.fin;sim.finished++;if(sim.finished===1)end('#'+b.id+' WINS!',b.color)}
+      }
+      collideAll(objs);
+    },
+    draw(){
+      x.strokeStyle='#ffffff55';x.lineWidth=2;
+      x.beginPath();x.moveTo(sim.lo,sim.top-80);x.lineTo(sim.lo,sim.fin);x.moveTo(sim.hi,sim.top-80);x.lineTo(sim.hi,sim.fin);x.stroke();
+      x.setLineDash([10,8]);x.strokeStyle='#c8f169';x.beginPath();x.moveTo(sim.lo,sim.fin);x.lineTo(sim.hi,sim.fin);x.stroke();x.setLineDash([]);
+      for(const row of sim.pegs)for(const p of row){
+        x.globalAlpha=.35+.65*p.flash;x.beginPath();x.arc(p.x,p.y,sim.pr,0,Math.PI*2);x.fillStyle='#fff';x.fill();p.flash*=.9;
+      }
+      x.globalAlpha=1;
+      x.textAlign='center';x.textBaseline='middle';
+      for(const b of objs){
+        dot(b);
+        if(b.r>=6){x.fillStyle='#000c';x.font='800 '+(b.r*1.05)+'px system-ui,Arial,sans-serif';x.fillText(b.id,b.x,b.y+.5)}
+      }
+      x.textAlign='left';x.textBaseline='alphabetic';
+    },
+    counter(){
+      const lead=objs.reduce((a,b)=>b.y>a.y?b:a,objs[0]);
+      return[{t:'LEADER #'+lead.id,c:lead.color}];
+    }
   }
 };
 
@@ -819,6 +984,147 @@ $('musicvol').addEventListener('input',()=>{
 });
 document.addEventListener('pointerdown',wake,{once:true});
 
+/* Chrome writes fragmented MP4 with placeholder durations (~3s in many players).
+   Rewrite it as a standard MP4 with the real duration. Packets are copied untouched. */
+/* Fragmented MP4 -> standard MP4 with correct durations. Returns Uint8Array or null. */
+function fixMp4(ab){
+  const u8=new Uint8Array(ab),dv=new DataView(ab);
+  const rd32=o=>dv.getUint32(o),rds32=o=>dv.getInt32(o);
+  const tag=o=>String.fromCharCode(u8[o],u8[o+1],u8[o+2],u8[o+3]);
+  const kids=(s,e)=>{
+    const out=[];let o=s;
+    while(o+8<=e){
+      let size=rd32(o),hdr=8;
+      if(size===1){size=Number(dv.getBigUint64(o+8));hdr=16}else if(size===0)size=e-o;
+      if(size<hdr||o+size>e)break;
+      out.push({t:tag(o+4),o,size,hdr,b:o+hdr,e:o+size});o+=size;
+    }
+    return out;
+  };
+  const top=kids(0,u8.length);
+  const moov=top.find(b=>b.t==='moov');
+  const moofs=top.filter(b=>b.t==='moof');
+  if(!moov||!moofs.length)return null;
+  const mk=kids(moov.b,moov.e);
+  if(!mk.some(b=>b.t==='mvex'))return null;
+
+  /* tracks + trex defaults */
+  const tracks={},trex={};
+  for(const trak of mk.filter(b=>b.t==='trak')){
+    const k=kids(trak.b,trak.e),tkhd=k.find(b=>b.t==='tkhd'),mdia=k.find(b=>b.t==='mdia');
+    const id=rd32(tkhd.b+(u8[tkhd.b]===1?20:12));
+    const m=kids(mdia.b,mdia.e),mdhd=m.find(b=>b.t==='mdhd'),hdlr=m.find(b=>b.t==='hdlr'),minf=m.find(b=>b.t==='minf');
+    const mf=kids(minf.b,minf.e),stbl=mf.find(b=>b.t==='stbl'),stsd=kids(stbl.b,stbl.e).find(b=>b.t==='stsd');
+    tracks[id]={id,tkhd,mdhd,hdlr,mf,stsd,ts:rd32(mdhd.b+(u8[mdhd.b]===1?20:12)),video:tag(hdlr.b+8)==='vide',
+      samples:[],chunks:[],t:0,start:null};
+  }
+  for(const mv of kids(mk.find(b=>b.t==='mvex').b,mk.find(b=>b.t==='mvex').e).filter(b=>b.t==='trex')){
+    trex[rd32(mv.b+4)]={dur:rd32(mv.b+12),size:rd32(mv.b+16),flags:rd32(mv.b+20)};
+  }
+
+  /* walk fragments */
+  const order=[];
+  for(const mf of moofs){
+    for(const traf of kids(mf.b,mf.e).filter(b=>b.t==='traf')){
+      const tk=kids(traf.b,traf.e),tfhd=tk.find(b=>b.t==='tfhd');
+      const fl=rd32(tfhd.b)&0xffffff,id=rd32(tfhd.b+4),T=tracks[id],tx=trex[id]||{dur:0,size:0,flags:0};
+      if(!T)continue;
+      let p=tfhd.b+8,base=mf.o,dDur=tx.dur,dSize=tx.size,dFlags=tx.flags;
+      if(fl&1){base=Number(dv.getBigUint64(p));p+=8}
+      if(fl&2)p+=4;
+      if(fl&8){dDur=rd32(p);p+=4}
+      if(fl&0x10){dSize=rd32(p);p+=4}
+      if(fl&0x20){dFlags=rd32(p);p+=4}
+      const tfdt=tk.find(b=>b.t==='tfdt');
+      if(tfdt){
+        const bt=u8[tfdt.b]===1?Number(dv.getBigUint64(tfdt.b+4)):rd32(tfdt.b+4);
+        if(T.start===null){T.start=bt;T.t=bt}
+        else if(bt!==T.t&&T.samples.length){
+          /* anchor to tfdt: stretch (gap) or trim (overlap) the previous sample, like real players do */
+          const last=T.samples[T.samples.length-1],nd=Math.max(1,last.d+(bt-T.t));
+          T.t+=nd-last.d;last.d=nd;
+        }
+      }else if(T.start===null){T.start=0}
+      let cursor=base;
+      for(const tr of tk.filter(b=>b.t==='trun')){
+        const ver=u8[tr.b],f=rd32(tr.b)&0xffffff,n=rd32(tr.b+4);let q=tr.b+8,off=cursor,ff;
+        if(f&1){off=base+rds32(q);q+=4}
+        if(f&4){ff=rd32(q);q+=4}
+        let size=0;
+        for(let i=0;i<n;i++){
+          let d=dDur;if(f&0x100){d=rd32(q);q+=4}
+          let s=dSize;if(f&0x200){s=rd32(q);q+=4}
+          let fg=dFlags;
+          if(f&0x400){fg=rd32(q);q+=4}else if(i===0&&ff!==undefined)fg=ff;
+          let cto=0;
+          if(f&0x800){cto=ver?rds32(q):rd32(q);q+=4}
+          T.samples.push({d,s,sync:!(fg&0x10000),cto});T.t+=d;size+=s;
+        }
+        T.chunks.push(n);order.push({id,src:off,size});cursor=off+size;
+      }
+    }
+  }
+  const ids=Object.keys(tracks).map(Number).filter(i=>tracks[i].samples.length);
+  if(!ids.length)return null;
+
+  /* byte helpers */
+  const be32=n=>[n>>>24&255,n>>>16&255,n>>>8&255,n&255],str=s=>[...s].map(c=>c.charCodeAt(0));
+  const cat=(...ps)=>{let l=0;for(const p of ps)l+=p.length;const o=new Uint8Array(l);let q=0;for(const p of ps){o.set(p,q);q+=p.length}return o};
+  const box=(t,...ps)=>{const body=cat(...ps.map(p=>p instanceof Uint8Array?p:Uint8Array.from(p)));return cat(be32(body.length+8),str(t),body)};
+  const full=(t,flags,...ps)=>box(t,[0,flags>>16&255,flags>>8&255,flags&255],...ps);
+  const raw=b=>u8.slice(b.o,b.e);
+  const arr32=a=>{const o=new Uint8Array(a.length*4);const d=new DataView(o.buffer);a.forEach((v,i)=>d.setUint32(i*4,v>>>0));return o};
+
+  const MT=1000;
+  let movieMs=0;
+  for(const id of ids){const T=tracks[id];T.mediaDur=T.samples.reduce((a,s)=>a+s.d,0);T.ms=Math.ceil(T.mediaDur/T.ts*MT);movieMs=Math.max(movieMs,T.ms+Math.ceil((T.start||0)/T.ts*MT))}
+
+  const trakBox=(T,mdatStart,offs)=>{
+    const S=T.samples;
+    /* stts */
+    const stts=[];for(const s of S){const l=stts[stts.length-1];if(l&&l[1]===s.d)l[0]++;else stts.push([1,s.d])}
+    /* stsc */
+    const stsc=[];T.chunks.forEach((n,i)=>{const l=stsc[stsc.length-1];if(!l||l[1]!==n)stsc.push([i+1,n,1])});
+    const tbl=[raw(T.stsd),full('stts',0,be32(stts.length),...stts.map(e=>be32(e[0]).concat(be32(e[1]))))];
+    if(S.some(s=>s.cto)){const c=[];for(const s of S){const l=c[c.length-1];if(l&&l[1]===s.cto)l[0]++;else c.push([1,s.cto])}
+      tbl.push(box('ctts',[S.some(s=>s.cto<0)?1:0,0,0,0],be32(c.length),...c.map(e=>be32(e[0]).concat(be32(e[1]>>>0)))))}
+    if(T.video&&S.some(s=>!s.sync)){const ss=[];S.forEach((s,i)=>{if(s.sync)ss.push(i+1)});tbl.push(full('stss',0,be32(ss.length),arr32(ss)))}
+    tbl.push(full('stsc',0,be32(stsc.length),...stsc.map(e=>be32(e[0]).concat(be32(e[1]),be32(e[2])))));
+    tbl.push(full('stsz',0,be32(0),be32(S.length),arr32(S.map(s=>s.s))));
+    tbl.push(full('stco',0,be32(offs.length),arr32(offs.map(o=>mdatStart+o))));
+    const stbl=box('stbl',...tbl);
+    const minf=box('minf',...T.mf.filter(b=>b.t!=='stbl').map(raw),stbl);
+    /* mdhd + tkhd copies with real durations */
+    const mdhd=raw(T.mdhd),md=new DataView(mdhd.buffer);
+    if(mdhd[8]===1)md.setBigUint64(8+24,BigInt(T.mediaDur));else md.setUint32(8+16,T.mediaDur);
+    const tkhd=raw(T.tkhd),td=new DataView(tkhd.buffer);
+    if(tkhd[8]===1)td.setBigUint64(8+28,BigInt(T.ms));else td.setUint32(8+20,T.ms);
+    let edts=[];
+    if(T.start>0){
+      const gap=Math.ceil(T.start/T.ts*MT);
+      edts=[box('edts',full('elst',0,be32(2),be32(gap),be32(-1>>>0),be32(0x10000),be32(T.ms),be32(0),be32(0x10000)))];
+    }
+    return box('trak',tkhd,...edts,box('mdia',mdhd,raw(T.hdlr),minf));
+  };
+  const mvhd=full('mvhd',0,be32(0),be32(0),be32(MT),be32(movieMs),be32(0x10000),[1,0,0,0],new Uint8Array(8),
+    be32(0x10000),be32(0),be32(0),be32(0),be32(0x10000),be32(0),be32(0),be32(0),be32(0x40000000),new Uint8Array(24),be32(Math.max(...ids)+1));
+
+  /* chunk byte offsets inside mdat, per track */
+  const offs={};let run=0;for(const id of ids)offs[id]=[];
+  const used=order.filter(o=>offs[o.id]);
+  for(const o of used){offs[o.id].push(run);run+=o.size}
+  const ftyp=box('ftyp',str('isom'),be32(512),str('isom'),str('iso2'),str('avc1'),str('mp41'));
+  const build=start=>box('moov',mvhd,...ids.map(id=>trakBox(tracks[id],start,offs[id])));
+  const moovLen=build(0).length,mdatStart=ftyp.length+moovLen+8;
+  const moovOut=build(mdatStart);
+  const out=new Uint8Array(ftyp.length+moovOut.length+8+run);
+  out.set(ftyp,0);out.set(moovOut,ftyp.length);
+  let pos=ftyp.length+moovOut.length;
+  out.set(be32(run+8),pos);out.set(str('mdat'),pos+4);pos+=8;
+  for(const o of used){out.set(u8.subarray(o.src,o.src+o.size),pos);pos+=o.size}
+  return out;
+}
+
 /* recording */
 function pickMime(){
   if(!window.MediaRecorder||!MediaRecorder.isTypeSupported)return'';
@@ -855,15 +1161,21 @@ function stopRec(){
   recElapsed=(performance.now()-recStart-recPaused)/1000;
   rec.stop();
 }
-function finishRec(){
+async function finishRec(){
   if(vs)vs.getTracks().forEach(t=>t.stop());
   const type=(recMime.split(';')[0])||'video/webm',ext=type.includes('mp4')?'mp4':'webm';
-  const blob=new Blob(chunks,{type});
+  let blob=new Blob(chunks,{type});
+  $('status').textContent='Finishing video…';
+  if(ext==='mp4'){
+    try{
+      const fixed=fixMp4(await blob.arrayBuffer());
+      if(fixed&&fixed.length>1000)blob=new Blob([fixed],{type:'video/mp4'});
+    }catch(e){/* keep the original recording */}
+  }
   if(outUrl)URL.revokeObjectURL(outUrl);
   outUrl=URL.createObjectURL(blob);
   const v=$('outvid'),took=recElapsed;
   v.onloadedmetadata=()=>{
-    /* if the browser wrote a much shorter file than we recorded, say so */
     if(Number.isFinite(v.duration)&&v.duration>0&&took-v.duration>2)
       $('status').textContent='⚠ Recorded '+fmt(took)+' but the file is only '+fmt(v.duration)+'. Try Chrome on desktop.';
   };
