@@ -140,7 +140,7 @@ footer{padding:25px 5%;border-top:1px solid var(--soft);display:flex;justify-con
         <div><label for="ratio">Video format</label>
           <select id="ratio"><option value="9:16">Vertical · 9:16</option><option value="1:1">Square · 1:1</option><option value="16:9">Landscape · 16:9</option></select></div>
         <div><label for="dur">Length</label>
-          <select id="dur"><option value="0">Manual stop</option><option value="15">15 seconds</option><option value="30">30 seconds</option><option value="60">60 seconds</option></select></div>
+          <select id="dur"><option value="auto">Auto (until the result)</option><option value="0">Manual stop</option><option value="15">15 seconds</option><option value="30">30 seconds</option><option value="60">60 seconds</option></select></div>
       </div>
 
       <button class="btn primary wide" id="pause">Ⅱ Pause</button>
@@ -196,7 +196,7 @@ footer{padding:25px 5%;border-top:1px solid var(--soft);display:flex;justify-con
   <div class="steps">
     <div><span class="lime">01</span><b>Set the rules</b><p>Choose a simulation, write your hook and tune the parameters.</p></div>
     <div><span class="lime">02</span><b>Add sound</b><p>Every bounce plays a note. Bring your own track too: it is mixed into the recording.</p></div>
-    <div><span class="lime">03</span><b>Record and share</b><p>Pick 15, 30 or 60 seconds, then export. Share the link so others can replay your exact setup.</p></div>
+    <div><span class="lime">03</span><b>Record and share</b><p>Pick Auto (stops at the result) or 15, 30, 60 seconds, then export. Share the link so others can replay your exact setup.</p></div>
   </div>
 </section>
 
@@ -210,7 +210,7 @@ const c=$('canvas'),x=c.getContext('2d'),audioEl=$('audio');
 const PAL={citrus:['#c8f169','#9d8cff','#ff9f77','#70d6d1','#f4f4f2'],ocean:['#61d6ff','#4d8dff','#7cf0d4','#c6efff'],candy:['#ff4d9d','#ff7373','#c78bff','#ffd166'],mono:['#f5f5f2','#c6c8cc','#92959e','#ffffff']};
 const RATIOS={'9:16':[540,960,'9/16','min(100%,360px)'],'1:1':[720,720,'1/1','min(100%,520px)'],'16:9':[960,540,'16/9','min(100%,760px)']};
 const ALL=['count','speed','size','gravity','palette'];
-const DEF={count:14,speed:10,size:8,gravity:0,palette:'citrus',ratio:'9:16',dur:0,snd:'scale',inst:'sine',na:'PINK',ca:'#ff7ad9',nb:'RED',cb:'#ff2d2d'};
+const DEF={count:14,speed:10,size:8,gravity:0,palette:'citrus',ratio:'9:16',dur:'auto',snd:'scale',inst:'sine',na:'PINK',ca:'#ff7ad9',nb:'RED',cb:'#ff2d2d'};
 const INSTS=['sine','piano','marimba','bell','synth'];
 /* public-domain melodies, in semitones above middle C */
 const MEL={
@@ -224,7 +224,10 @@ const MEL={
 const s={preset:'grow',count:14,speed:1,size:8,gravity:0,palette:'citrus'};
 let run=true,last=0,objs=[],sim={},seed=(Math.random()*1e9|0)+1,_s=1,cx=0,cy=0,R=0,hookEdited=false,badgeTxt='';
 let ac=null,master=null,dest=null,musicGain=null,mediaSrc=null,muted=false,lastN=0,audioUrl=null;
-let rec=null,vs=null,chunks=[],outUrl=null,recMime='',recStart=0,recDur=0,lastStatus=0;
+let rec=null,vs=null,chunks=[],outUrl=null,recMime='',recStart=0,recDur=0,lastStatus=0,recPaused=0,recPauseAt=0,recElapsed=0;
+const HOLD=2500;      /* ms the result stays on screen */
+const AUTO_MAX=60;    /* seconds, safety cap for Auto mode */
+const AUTO_ENDLESS=20;/* seconds, for ideas that never end (fountain) */
 let fx=[],rings=[],shake=0,fxOn=true,wmOn=true,mi=0,snd='scale',inst='sine';
 
 /* ---------- seeded random ---------- */
@@ -502,7 +505,12 @@ const P={
   multiply:{
     title:'Will the balls take over?',
     uses:['count','speed','size','gravity','palette'],
-    init(){const b=spawn(0);b.x=cx;b.y=cy;objs=[b];sim.goal=Math.max(4,s.count)},
+    init(){
+      const b=spawn(0);b.x=cx;b.y=cy;objs=[b];
+      /* more balls = longer video; capped so the arena never jams */
+      const cap=Math.floor(.4*R*R/(s.size*s.size));
+      sim.goal=Math.max(4,Math.min(s.count*2,cap,100));sim.nextSpawn=0;
+    },
     step(h){
       const n=objs.length;
       for(let i=0;i<n;i++){
@@ -510,10 +518,10 @@ const P={
         move(b,h);
         if(wallHit(b)){
           sim.bounces++;blip(sim.bounces,.18);bounceFx(b,3);
-          if(objs.length<sim.goal){
+          if(objs.length<sim.goal&&sim.t>=sim.nextSpawn){
             const k=spawn(objs.length),dx=cx-b.x,dy=cy-b.y,d=Math.hypot(dx,dy)||1;
             k.x=b.x+dx/d*b.r*2;k.y=b.y+dy/d*b.r*2;
-            objs.push(k);
+            objs.push(k);sim.nextSpawn=sim.t+24;
           }
         }
         keepSpeed(b);
@@ -576,9 +584,9 @@ const P={
       let all=true;
       for(let i=0;i<objs.length;i++){
         const b=objs[i];
-        if(!b.on&&(i===0?sim.t>30:objs[i-1].angle>.35))b.on=true;
+        if(!b.on&&(i===0?sim.t>30:objs[i-1].angle>.3))b.on=true;
         if(b.on&&!b.done){
-          b.vel+=.004*h;b.angle+=b.vel*h;
+          b.vel+=.0011*h;b.angle+=b.vel*h;
           if(b.angle>=Math.PI/2){b.angle=Math.PI/2;b.done=true;sim.bounces++;blip(sim.bounces,.2,'triangle');burst(b.x+b.w/2+b.h*.9,sim.floor,b.color,6,2)}
         }
         if(!b.done)all=false;
@@ -597,6 +605,7 @@ const P={
   },
   fountain:{
     title:'Every bounce plays a note',
+    endless:true,
     uses:['count','speed','size','gravity','palette'],
     init(){
       const n=Math.min(100,s.count*2);
@@ -645,15 +654,22 @@ function advance(frames){
 function fmt(sec){return Math.floor(sec/60)+':'+String(Math.floor(sec%60)).padStart(2,'0')}
 function recTick(){
   if(!rec||rec.state!=='recording')return;
-  const now=performance.now(),el=(now-recStart)/1000;
-  if(recDur&&el>=recDur){stopRec();return}
-  if(now-lastStatus>250){lastStatus=now;$('status').textContent='● REC '+fmt(el)+(recDur?' / '+fmt(recDur):'')}
+  const now=performance.now(),el=(now-recStart-recPaused)/1000;
+  if(recDur==='auto'){
+    const cap=P[s.preset].endless?AUTO_ENDLESS:AUTO_MAX;
+    if((sim.over&&now-sim.overAt>=HOLD)||el>=cap){stopRec();return}
+  }else if(recDur>0&&el>=recDur){stopRec();return}
+  if(now-lastStatus>250){
+    lastStatus=now;
+    const goal=recDur==='auto'?(P[s.preset].endless?AUTO_ENDLESS:0):recDur;
+    $('status').textContent='● REC '+fmt(el)+(goal?' / '+fmt(goal):'')+(recDur==='auto'&&!goal?' · stops at the result':'');
+  }
 }
 function frame(t){
   if(!last)last=t;
   const dt=Math.min(34,t-last)/16.667;last=t;
   geom();
-  if(sim.over&&run&&performance.now()-sim.overAt>3000)reset();
+  if(sim.over&&run&&performance.now()-sim.overAt>HOLD+500&&!(rec&&rec.state!=='inactive'&&recDur==='auto'))reset();
   advance(dt);
   if(run)stepFx(dt);
   shake*=Math.pow(.88,dt);
@@ -750,11 +766,11 @@ $('ratio').addEventListener('change',()=>{applyRatio();reset();writeURL()});
 $('pause').addEventListener('click',()=>{
   run=!run;
   $('pause').textContent=run?'Ⅱ Pause':'▶ Resume';
-  if(!(rec&&rec.state==='recording'))$('status').textContent=run?'Simulation running':'Simulation paused';
+  if(!(rec&&rec.state!=='inactive'))$('status').textContent=run?'Simulation running':'Simulation paused';
 });
 $('regen').addEventListener('click',()=>{seed=(Math.random()*1e9|0)+1;reset();writeURL()});
 $('reset').addEventListener('click',()=>{
-  if(rec&&rec.state==='recording')return;
+  if(rec&&rec.state!=='inactive')return;
   $('count').value=DEF.count;$('speed').value=DEF.speed;$('size').value=DEF.size;$('gravity').value=DEF.gravity;
   $('palette').value=DEF.palette;$('ratio').value=DEF.ratio;$('dur').value=DEF.dur;
   $('snd').value=DEF.snd;$('inst').value=DEF.inst;snd=DEF.snd;inst=DEF.inst;
@@ -823,31 +839,56 @@ function startRec(){
   recMime=rec.mimeType||mime||'video/webm';
   rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
   rec.onstop=finishRec;
-  recDur=+$('dur').value;
+  recDur=$('dur').value==='auto'?'auto':(+$('dur').value||0);
   run=true;$('pause').textContent='Ⅱ Pause';
   reset();
   if(audioEl.src){audioEl.currentTime=0;audioEl.play().catch(()=>{})}
   rec.start(250);
-  recStart=performance.now();lastStatus=0;
+  recStart=performance.now();lastStatus=0;recPaused=0;recPauseAt=0;recElapsed=0;
+  $('dur').disabled=true;
   $('record').textContent='■ Stop';$('record').classList.add('recording');
   $('ratio').disabled=true;$('download').disabled=true;
 }
-function stopRec(){if(rec&&rec.state==='recording')rec.stop()}
+function stopRec(){
+  if(!rec||rec.state==='inactive')return;
+  if(rec.state==='paused'&&recPauseAt){recPaused+=performance.now()-recPauseAt;recPauseAt=0}
+  recElapsed=(performance.now()-recStart-recPaused)/1000;
+  rec.stop();
+}
 function finishRec(){
   if(vs)vs.getTracks().forEach(t=>t.stop());
   const type=(recMime.split(';')[0])||'video/webm',ext=type.includes('mp4')?'mp4':'webm';
   const blob=new Blob(chunks,{type});
   if(outUrl)URL.revokeObjectURL(outUrl);
   outUrl=URL.createObjectURL(blob);
-  $('outvid').src=outUrl;$('outvid').hidden=false;
+  const v=$('outvid'),took=recElapsed;
+  v.onloadedmetadata=()=>{
+    /* if the browser wrote a much shorter file than we recorded, say so */
+    if(Number.isFinite(v.duration)&&v.duration>0&&took-v.duration>2)
+      $('status').textContent='⚠ Recorded '+fmt(took)+' but the file is only '+fmt(v.duration)+'. Try Chrome on desktop.';
+  };
+  v.src=outUrl;v.hidden=false;
   $('download').disabled=false;$('download').textContent='Download recording ('+ext.toUpperCase()+')';
   $('download').dataset.ext=ext;
   $('record').textContent='● Record';$('record').classList.remove('recording');
-  $('ratio').disabled=false;
+  $('ratio').disabled=false;$('dur').disabled=false;
   if(audioEl.src)audioEl.pause();
-  $('status').textContent='Recording ready · '+ext.toUpperCase();
+  $('status').textContent='Recording ready · '+ext.toUpperCase()+' · '+fmt(took);
 }
-$('record').addEventListener('click',()=>{if(rec&&rec.state==='recording')stopRec();else startRec()});
+/* background tabs freeze animation: pause the recording instead of saving a frozen clip */
+document.addEventListener('visibilitychange',()=>{
+  if(!rec)return;
+  if(document.hidden&&rec.state==='recording'){
+    rec.pause();recPauseAt=performance.now();
+    if(audioEl.src)audioEl.pause();
+    $('status').textContent='Ⅱ Recording paused: come back to this tab';
+  }else if(!document.hidden&&rec.state==='paused'){
+    recPaused+=performance.now()-recPauseAt;recPauseAt=0;
+    rec.resume();
+    if(audioEl.src)audioEl.play().catch(()=>{});
+  }
+});
+$('record').addEventListener('click',()=>{if(rec&&rec.state!=='inactive')stopRec();else startRec()});
 $('download').addEventListener('click',()=>{
   if(!outUrl)return;
   const a=document.createElement('a');
