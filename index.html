@@ -60,7 +60,7 @@ h2{font-size:34px;letter-spacing:-1px;margin:8px 0}
 .controls h3{margin:0 0 20px}
 .controls label{display:flex;justify-content:space-between;margin:15px 0 8px;color:var(--muted);font-size:11px}
 .controls label b{color:var(--text)}
-select,input[type=text]{width:100%;background:var(--field);color:var(--text);border:1px solid var(--fieldline);border-radius:8px;padding:10px}
+select,input[type=text],input[type=number]{width:100%;background:var(--field);color:var(--text);border:1px solid var(--fieldline);border-radius:8px;padding:10px}
 input[type=range]{width:100%;accent-color:var(--lime)}
 .twocol{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .teamrow{display:grid;grid-template-columns:1fr 46px;gap:8px;margin-bottom:8px}
@@ -124,7 +124,7 @@ footer{padding:25px 5%;border-top:1px solid var(--soft);display:flex;justify-con
   <div class="eyebrow">CREATIVE PHYSICS STUDIO</div>
   <h1>Make motion.<br><span class="lime">Tell a story.</span></h1>
   <p>Build playful physics simulations, tune the rules, let every bounce play a note, add your own soundtrack, and record vertical videos for your socials.</p>
-  <div class="actions"><a class="btn primary" href="#studio">Open the studio ↗</a><a class="btn" href="#ideas">Explore ideas</a></div>
+  <div class="actions"><a class="btn primary" href="#studio">Open the studio ↗</a><a class="btn" href="#ideas">Explore ideas</a><button class="btn" id="daily" type="button">★ Today's challenge</button></div>
 </section>
 
 <section class="section studio" id="studio" data-main>
@@ -149,6 +149,7 @@ footer{padding:25px 5%;border-top:1px solid var(--soft);display:flex;justify-con
         <option value="hole">Black hole</option>
         <option value="paint">Territory war</option>
         <option value="battle">Ball battle</option>
+        <option value="multiring">Multiplier ring</option>
       </select>
 
       <label for="hook">Video title (hook) <b id="hv"></b></label>
@@ -177,7 +178,7 @@ footer{padding:25px 5%;border-top:1px solid var(--soft);display:flex;justify-con
 
       <div class="twocol">
         <div><label for="ratio">Video format</label>
-          <select id="ratio"><option value="9:16">Vertical · 9:16</option><option value="1:1">Square · 1:1</option><option value="16:9">Landscape · 16:9</option></select></div>
+          <select id="ratio"><option value="9:16">Vertical · 9:16 (TikTok, Reels, Shorts)</option><option value="1:1">Square · 1:1 (Instagram post)</option><option value="16:9">Landscape · 16:9 (YouTube)</option></select></div>
         <div><label for="dur">Length</label>
           <select id="dur"><option value="auto">Auto (until the result)</option><option value="0">Manual stop</option><option value="15">15 seconds</option><option value="30">30 seconds</option><option value="60">60 seconds</option></select></div>
       </div>
@@ -187,7 +188,9 @@ footer{padding:25px 5%;border-top:1px solid var(--soft);display:flex;justify-con
         <button class="btn" id="regen">↻ Regenerate</button>
         <button class="btn" id="record">● Record</button>
       </div>
+      <button class="btn wide" id="daily2">★ Today's challenge</button>
       <button class="btn wide" id="share">⧉ Copy share link</button>
+      <small style="display:block;margin-top:8px;color:var(--muted)">Shortcuts: Space pause · N new · R record</small>
 
       <div class="music">
         <b>Sound</b>
@@ -204,6 +207,16 @@ footer{padding:25px 5%;border-top:1px solid var(--soft);display:flex;justify-con
         <label for="musicvol">Music volume <b id="mv">70</b></label>
         <input id="musicvol" type="range" min="0" max="100" value="70">
         <audio id="audio" hidden loop></audio>
+        <div class="twocol" style="margin-top:12px">
+          <div style="grid-column:1/-1"><label for="bgm">Built-in music (free to use)</label>
+          <select id="bgm"><option value="off">Off</option><option value="chill">Chill beat · 90 BPM</option><option value="upbeat">Upbeat · 124 BPM</option><option value="dark">Dark groove · 100 BPM</option></select></div>
+        </div>
+        <button class="btn wide" id="beat" aria-pressed="false" style="margin-top:12px">🥁 Beat sync: Off</button>
+        <div class="twocol" style="margin-top:10px">
+          <div><label for="bpm">BPM <small id="bpmnote"></small></label><input id="bpm" type="number" min="60" max="200" step="0.1" value="120"></div>
+          <div><label for="boff">Beat offset <b id="bov">0</b> ms</label><input id="boff" type="range" min="-200" max="200" value="0"></div>
+        </div>
+        <p>Beat sync flashes and pulses on every beat of your audio and snaps bounce notes to the rhythm. Tempo is detected when you pick a file; fix it by hand if it is off.</p>
         <p>Bounce sounds and your audio file are both mixed into the recording. Use audio you have rights to use.</p>
       </div>
     </aside>
@@ -237,6 +250,7 @@ footer{padding:25px 5%;border-top:1px solid var(--soft);display:flex;justify-con
     <button class="idea" data-preset="hole"><small>12 / GRAVITY</small><span class="art"><i></i><i></i><i></i><i></i></span><b>Black Hole</b><small>Everything spirals in. Every swallow plays a note.</small></button>
     <button class="idea" data-preset="paint"><small>13 / TERRITORY</small><span class="art"><i></i><i></i><i></i><i></i></span><b>Territory War</b><small>Two teams repaint each other's ground. Most area wins.</small></button>
     <button class="idea" data-preset="battle"><small>14 / BATTLE</small><span class="art"><i></i><i></i><i></i><i></i></span><b>Ball Battle</b><small>Every collision costs health. One ball is left standing.</small></button>
+    <button class="idea" data-preset="multiring"><small>15 / EXPLOSION</small><span class="art"><i></i><i></i><i></i><i></i></span><b>Multiplier Ring</b><small>One ball. Gates on the ring multiply it, until it takes over.</small></button>
   </div>
 </section>
 
@@ -390,12 +404,137 @@ function note(f,t,v,type){
 }
 function blip(i,v,type){
   if(!ac||muted)return;
-  const t=ac.currentTime;
+  const t=ac.currentTime+beatDelay();
   if(t-lastN<.045)return;
   lastN=t;
   const seq=MEL[snd];
   const semi=seq?seq[(mi++)%seq.length]:SC[((i%SC.length)+SC.length)%SC.length];
   note(261.63*Math.pow(2,semi/12),t,v==null?.22:v,type);
+}
+/* ---------- beat sync ---------- */
+let beatOn=false,lastBeat=-1e9,beatPulse=0;
+function analyzeBeats(d,sr){
+  const hop=256,n=Math.floor(d.length/hop),fps=sr/hop;
+  if(n<fps*4)return null;
+  const env=new Float32Array(n),on=new Float32Array(n);
+  for(let i=0;i<n;i++){let e=0;for(let j=0;j<hop;j++){const v=d[i*hop+j];e+=v*v}env[i]=Math.log(1+80*Math.sqrt(e/hop))}
+  for(let i=1;i<n;i++)on[i]=Math.max(0,env[i]-env[i-1]);
+  const at=(a,t)=>{const i=Math.floor(t);if(i<0||i+1>=a.length)return 0;const f=t-i;return a[i]*(1-f)+a[i+1]*f};
+  const score=b=>{
+    const L=60*fps/b;let sc=0;
+    for(let i=0;i+2*L<n;i++){const v=on[i];if(v>0)sc+=v*(at(on,i+L)+.5*at(on,i+2*L))}
+    return sc;
+  };
+  let best=0,bb=120;
+  for(let b=70;b<=180;b+=.5){
+    const w=Math.exp(-.5*Math.pow(Math.log2(b/120)/.8,2)),sc=score(b)*w;
+    if(sc>best){best=sc;bb=b}
+  }
+  /* fine search: tempo and phase together on a lightly smoothed onset curve */
+  const sm=new Float32Array(n);
+  for(let i=1;i<n-1;i++)sm[i]=(on[i-1]+2*on[i]+on[i+1])/4;
+  const P0=60*fps/bb;let bestSc=-1,P=P0,ph=0;
+  for(let f=.985;f<=1.0151;f+=.0002){
+    const Pc=P0*f;
+    for(let q=0;q<Pc;q+=.5){let sc=0;for(let t=q;t<n-1;t+=Pc)sc+=at(sm,t);if(sc>bestSc){bestSc=sc;P=Pc;ph=q}}
+  }
+  return{bpm:Math.round(60*fps/P*10)/10,offset:ph/fps};
+}
+function audioPlaying(){return !!bgm||(!!audioEl.src&&!audioEl.paused&&!audioEl.ended)}
+function beatP(){return 60/Math.max(30,Math.min(300,+$('bpm').value||120))}
+function beatClock(){return (bgm?ac.currentTime-bgm.start:audioEl.currentTime-beatOffs)-(+$('boff').value)/1000}
+let beatOffs=0;
+function beatDelay(){
+  if(!beatOn||!audioPlaying())return 0;
+  const g=beatP()/4,q=beatClock()/g;
+  return Math.max(0,Math.min(g,(Math.ceil(q-.02)-q)*g));
+}
+function onBeat(k){
+  beatPulse=1;shake=Math.min(12,shake+3);
+  if(rings.length<40)rings.push({x:cx,y:cy,r:R*.12,life:1,color:col(k)});
+}
+function beatTick(dt){
+  if(!beatOn||!audioPlaying()){lastBeat=-1e9;beatPulse*=Math.pow(.8,dt);return}
+  const k=Math.floor(beatClock()/beatP());
+  if(k!==lastBeat){if(k===lastBeat+1)onBeat(k);lastBeat=k}
+  beatPulse*=Math.pow(.86,dt);
+}
+/* ---------- built-in music: generated live, so it is original and free to use ---------- */
+let bgm=null,noiseBuf=null;
+const BGM={
+  chill:{bpm:90,prog:[[57,0],[53,1],[60,1],[55,1]],kick:[1,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0],hat:[0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,1],snare:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],bass:[1,0,0,1,0,0,1,0,1,0,0,0,1,0,0,0],lead:'triangle',arp:.09},
+  upbeat:{bpm:124,prog:[[60,1],[55,1],[57,0],[53,1]],kick:[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],hat:[0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0],snare:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],bass:[1,0,0,1,0,0,1,0,1,0,0,1,0,0,1,0],lead:'square',arp:.05},
+  dark:{bpm:100,prog:[[57,0],[57,0],[53,1],[52,0]],kick:[1,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0],hat:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,1],snare:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],bass:[1,1,0,0,1,0,0,1,1,0,0,0,1,0,1,0],lead:'sawtooth',arp:.035}
+};
+const mf=m=>440*Math.pow(2,(m-69)/12);
+function mTone(f,t,d,v,type){
+  if(!ac||!bgm)return;
+  const o=ac.createOscillator(),g=ac.createGain();
+  o.type=type;o.frequency.value=f;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.01);g.gain.exponentialRampToValueAtTime(.0008,t+d);
+  o.connect(g);g.connect(bgm.out);o.start(t);o.stop(t+d+.05);
+}
+function mNoise(t,d,v,type,freq){
+  if(!ac||!bgm)return;
+  if(!noiseBuf){noiseBuf=ac.createBuffer(1,ac.sampleRate*.3,ac.sampleRate);const a=noiseBuf.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=Math.random()*2-1}
+  const s2=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();
+  s2.buffer=noiseBuf;f.type=type;f.frequency.value=freq;
+  g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0008,t+d);
+  s2.connect(f);f.connect(g);g.connect(bgm.out);s2.start(t);s2.stop(t+d+.02);
+}
+function mKick(t){
+  if(!ac||!bgm)return;
+  const o=ac.createOscillator(),g=ac.createGain();
+  o.frequency.setValueAtTime(140,t);o.frequency.exponentialRampToValueAtTime(42,t+.13);
+  g.gain.setValueAtTime(.8,t);g.gain.exponentialRampToValueAtTime(.001,t+.26);
+  o.connect(g);g.connect(bgm.out);o.start(t);o.stop(t+.3);
+}
+function bgmStep(i,t){
+  const st=BGM[bgm.style],bar=(i>>4)&3,k=i&15,[root,maj]=st.prog[bar],sd=60/st.bpm/4;
+  const tri=[0,maj?4:3,7];
+  if(st.kick[k])mKick(t);
+  if(st.hat[k])mNoise(t,.05,k%4===2?.16:.1,'highpass',7500);
+  if(st.snare[k]){mNoise(t,.14,.22,'bandpass',1900);mTone(190,t,.1,.18,'triangle')}
+  if(st.bass[k])mTone(mf(root-24),t,sd*2.2,.5,'triangle');
+  if(k%2===0){const n=tri[(k>>1)%3]+((k>>1)%4===3?12:0);mTone(mf(root+12+n),t,sd*2.6,st.arp+.05,st.lead)}
+  if(k===0)tri.forEach(n=>mTone(mf(root+n),t,sd*15,.07,'sine'));
+}
+function startBgm(style){
+  stopBgm();wake();if(!ac)return;
+  const st=BGM[style];if(!st)return;
+  const out=ac.createGain();out.gain.value=1;out.connect(musicGain);
+  bgm={style,out,start:ac.currentTime+.12,idx:0,next:ac.currentTime+.12,timer:0};
+  bgm.timer=setInterval(()=>{
+    if(!bgm)return;
+    const sd=60/BGM[bgm.style].bpm/4;
+    while(bgm.next<ac.currentTime+.18){bgmStep(bgm.idx,bgm.next);bgm.idx++;bgm.next+=sd}
+  },30);
+}
+function stopBgm(){
+  if(!bgm)return;
+  clearInterval(bgm.timer);
+  const o=bgm.out;try{o.gain.setTargetAtTime(0,ac.currentTime,.03)}catch(e){}
+  setTimeout(()=>{try{o.disconnect()}catch(e){}},400);
+  bgm=null;
+}
+function setBgm(v){
+  if(v==='off'){stopBgm();$('bgm').value='off';return}
+  audioEl.pause();
+  startBgm(v);
+  if(bgm){$('bpm').value=BGM[v].bpm;beatOffs=0;$('boff').value=0;$('bov').textContent='0';$('bpmnote').textContent='· built-in';lastBeat=-1e9}
+}
+$('bgm').addEventListener('change',()=>setBgm($('bgm').value));
+async function detectTempo(file){
+  const note=$('bpmnote');note.textContent='· detecting…';
+  try{
+    wake();if(!ac)throw 0;
+    const buf=await ac.decodeAudioData(await file.arrayBuffer());
+    const sr=buf.sampleRate,len=Math.min(buf.length,sr*75),mono=new Float32Array(len);
+    for(let ch=0;ch<buf.numberOfChannels;ch++){const d=buf.getChannelData(ch);for(let i=0;i<len;i++)mono[i]+=d[i]/buf.numberOfChannels}
+    const r=analyzeBeats(mono,sr);
+    if(!r)throw 0;
+    $('bpm').value=r.bpm;beatOffs=r.offset;note.textContent='· detected';
+  }catch(e){note.textContent='· set by hand'}
 }
 function demo(){
   wake();
@@ -1109,6 +1248,74 @@ const P={
       return[0,1].map(t=>({t:sim.names[t]+' '+Math.round(sim.cnt[t]/tot*100)+'%',c:sim.cols[t]}));
     }
   },
+  multiring:{
+    title:'Can one ball take over the ring?',
+    uses:['count','speed','size','palette'],
+    init(){
+      const n=Math.max(1,Math.min(4,Math.round(s.count/7)));
+      Object.assign(sim,{MAXB:500,gates:[],boss:0,hue:0});
+      for(let i=0;i<n;i++)sim.gates.push({a:i*6.2832/n+rng()*.6,w:.5,mult:i%2?3:2,dir:i%2?-1:1});
+      const b=spawn(0,Math.max(2.5,s.size*.7));b.x=cx;b.y=cy;b.cd=0;objs=[b];
+    },
+    step(h){
+      sim.hue+=.4*h;
+      for(const g of sim.gates)g.a+=.011*g.dir*h;
+      const n=objs.length;
+      for(let i=0;i<n;i++){
+        const b=objs[i];
+        b.cd-=h;
+        move(b,h);
+        if(wallHit(b)){
+          if(b.cd<=0&&!sim.boss){
+            const ang=Math.atan2(b.y-cy,b.x-cx);
+            for(const g of sim.gates){
+              let d=Math.abs(((ang-g.a)%6.2832+9.4248)%6.2832-3.1416);d=Math.abs(3.1416-d);
+              if(d<g.w/2){
+                b.cd=40;
+                for(let k=1;k<g.mult&&objs.length<sim.MAXB;k++){
+                  const c2=spawn(0,b.r),va=rng()*6.2832;
+                  c2.x=b.x;c2.y=b.y;c2.vx=Math.cos(va)*c2.sp;c2.vy=Math.sin(va)*c2.sp;
+                  c2.color=col(Math.floor(Math.log2(objs.length+1)));c2.cd=40;objs.push(c2);
+                }
+                blip(Math.round(Math.log2(objs.length+1)*2),.2);
+                if(objs.length<80){ripple(b.x,b.y,col(Math.floor(Math.log2(objs.length+1))),b.r);burst(b.x,b.y,'#ffffff',4,2)}
+                break;
+              }
+            }
+          }
+        }
+        keepSpeed(b);
+      }
+      if(!sim.boss&&objs.length>=sim.MAXB){sim.boss=1;sim.br=0;shake=10}
+      if(sim.boss){
+        sim.br+=R/130*h;
+        if(sim.br>=R*1.02)end('x'+sim.MAXB+' BALLS!','#ff4fd8');
+      }
+    },
+    draw(){
+      const seg=90;x.lineWidth=5;x.lineCap='butt';
+      for(let i=0;i<seg;i++){
+        const a0=i/seg*6.2832,a1=(i+1.2)/seg*6.2832;
+        x.beginPath();x.arc(cx,cy,R+3,a0,a1);x.strokeStyle='hsl('+((i*4+sim.hue)%360)+',90%,62%)';x.stroke();
+      }
+      for(const g of sim.gates){
+        x.beginPath();x.arc(cx,cy,R+3,g.a-g.w/2,g.a+g.w/2);x.strokeStyle='#ffffff';x.lineWidth=9;x.globalAlpha=.9;x.stroke();x.globalAlpha=1;
+        const px=cx+Math.cos(g.a)*(R+3),py=cy+Math.sin(g.a)*(R+3),rr=Math.max(15,R*.075);
+        x.beginPath();x.arc(px,py,rr,0,Math.PI*2);x.fillStyle='#6d4cff';x.fill();x.lineWidth=2;x.strokeStyle='#fff';x.stroke();
+        x.fillStyle='#fff';x.font='bold '+Math.round(rr*.95)+'px system-ui,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('x'+g.mult,px,py+1);x.textBaseline='alphabetic';
+      }
+      x.save();x.globalCompositeOperation='lighter';
+      for(const b of objs){x.beginPath();x.arc(b.x,b.y,Math.max(1.5,b.r),0,Math.PI*2);x.fillStyle=b.color;x.globalAlpha=objs.length>60?.6:.9;x.fill()}
+      x.restore();x.globalAlpha=1;
+      if(sim.boss){
+        const r=Math.max(1,sim.br),gr=x.createRadialGradient(cx,cy,0,cx,cy,r);
+        gr.addColorStop(0,'#ffffff');gr.addColorStop(.18,'#ff9bea');gr.addColorStop(1,'#ff2fd0');
+        x.save();x.beginPath();x.arc(cx,cy,Math.min(r,R),0,Math.PI*2);x.clip();
+        x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);x.fillStyle=gr;x.shadowColor='#ff2fd0';x.shadowBlur=30;x.fill();x.restore();
+      }
+    },
+    counter(){return[{t:'BALLS '+objs.length}]}
+  },
   battle:{
     title:'Ball battle: every hit hurts',
     uses:['count','speed','size','palette'],
@@ -1181,6 +1388,7 @@ function frame(t){
   if(sim.over&&run&&performance.now()-sim.overAt>HOLD+500&&!(rec&&rec.state!=='inactive'&&recDur==='auto'))reset();
   advance(dt);
   if(run)stepFx(dt);
+  beatTick(dt);
   shake*=Math.pow(.88,dt);
   x.fillStyle='#07080b';x.fillRect(0,0,c.width,c.height);
   x.save();
@@ -1188,6 +1396,7 @@ function frame(t){
   P[s.preset].draw();
   drawFx();
   x.restore();
+  if(beatPulse>.03){x.fillStyle='rgba(255,255,255,'+(.07*beatPulse).toFixed(3)+')';x.fillRect(0,0,c.width,c.height)}
   drawTitle();
   drawCounter(P[s.preset].counter());
   drawOverlay();
@@ -1226,10 +1435,14 @@ function query(){
   return new URLSearchParams(o).toString();
 }
 function shareURL(){return location.href.split('#')[0].split('?')[0]+'?'+query()+'#studio'}
-function writeURL(){try{history.replaceState(null,'','?'+query()+location.hash)}catch(e){}}
+function writeURL(){
+  try{history.replaceState(null,'','?'+query()+location.hash)}catch(e){}
+  try{const q=new URLSearchParams(query());q.delete('seed');q.delete('t');localStorage.setItem('ml-last',q.toString())}catch(e){}
+}
 function loadURL(){
   try{
-    const q=new URLSearchParams(location.search);
+    let saved='';try{saved=localStorage.getItem('ml-last')||''}catch(e){}
+    const q=new URLSearchParams(location.search||saved);
     const num=(k,mn,mx,d)=>{const v=parseInt(q.get(k),10);return Number.isFinite(v)?Math.min(mx,Math.max(mn,v)):d};
     const p=q.get('p');if(p&&P[p])s.preset=p;
     $('count').value=num('n',2,50,DEF.count);$('speed').value=num('sp',2,25,DEF.speed);
@@ -1278,6 +1491,27 @@ $('pause').addEventListener('click',()=>{
   $('pause').textContent=run?'Ⅱ Pause':'▶ Resume';
   if(!(rec&&rec.state!=='inactive'))$('status').textContent=run?'Simulation running':'Simulation paused';
 });
+const DAILY=['grow','race','multiply','survivor','domino','rps','infect','marble','corner','wave','hole','paint','battle','multiring','fountain'];
+function dailyChallenge(){
+  if(rec&&rec.state!=='inactive')return;
+  const d=new Date(),key=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+  const day=Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5);
+  $('count').value=DEF.count;$('speed').value=DEF.speed;$('size').value=DEF.size;$('gravity').value=DEF.gravity;
+  $('palette').value=DEF.palette;hookEdited=false;seed=key;
+  setPreset(DAILY[day%DAILY.length]);
+  $('studio').scrollIntoView({behavior:'smooth'});
+  $('status').textContent="Today's challenge · "+d.toISOString().slice(0,10);
+}
+$('daily').addEventListener('click',dailyChallenge);
+$('daily2').addEventListener('click',dailyChallenge);
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  const t=e.target&&e.target.tagName;if(/INPUT|SELECT|TEXTAREA|BUTTON|A/.test(t||''))return;
+  if(location.hash.startsWith('#/'))return;
+  if(e.code==='Space'){e.preventDefault();$('pause').click()}
+  else if(e.key==='r'||e.key==='R')$('record').click();
+  else if(e.key==='n'||e.key==='N')$('regen').click();
+});
 $('regen').addEventListener('click',()=>{seed=(Math.random()*1e9|0)+1;reset();writeURL()});
 $('reset').addEventListener('click',()=>{
   if(rec&&rec.state!=='inactive')return;
@@ -1315,12 +1549,30 @@ $('audiofile').addEventListener('change',()=>{
   audioEl.src=audioUrl;audioEl.loop=true;
   hookAudio();
   $('audioname').textContent=f.name;
+  if(bgm){stopBgm();$('bgm').value='off'}
+  beatOffs=0;detectTempo(f);
 });
+$('beat').addEventListener('click',()=>{
+  beatOn=!beatOn;lastBeat=-1e9;
+  $('beat').textContent=beatOn?'🥁 Beat sync: On':'🥁 Beat sync: Off';$('beat').setAttribute('aria-pressed',String(beatOn));
+  if(beatOn){hookAudio();if(audioEl.src&&audioEl.paused)startAudio();else if(!audioEl.src&&!bgm)$('bpmnote').textContent='· pick built-in music or a file first'}
+});
+$('boff').addEventListener('input',()=>{$('bov').textContent=$('boff').value});
+$('bpm').addEventListener('input',()=>{$('bpmnote').textContent='· manual'});
 $('audioplay').addEventListener('click',()=>{
   if(!audioEl.src){$('audiofile').click();return}
   hookAudio();
-  if(audioEl.paused)audioEl.play().catch(()=>{});else audioEl.pause();
+  if(audioEl.paused)startAudio();else audioEl.pause();
 });
+function startAudio(){
+  if(bgm){stopBgm();$('bgm').value='off'}
+  hookAudio();
+  if(ac&&ac.state!=='running')ac.resume().catch(()=>{});
+  const pr=audioEl.play();
+  if(pr&&pr.catch)pr.catch(e=>{$('audioname').textContent='⚠ Could not play ('+((e&&e.name)||'error')+'). Tap Play audio again.'});
+}
+audioEl.addEventListener('error',()=>{$('audioname').textContent='⚠ This file cannot be played here. Try an MP3 or M4A.';$('bpmnote').textContent=''});
+audioEl.addEventListener('loadedmetadata',()=>{const f=$('audiofile').files[0];if(f)$('audioname').textContent=f.name+' · '+fmt(audioEl.duration||0)});
 audioEl.addEventListener('play',()=>{$('audioplay').textContent='Pause audio'});
 audioEl.addEventListener('pause',()=>{$('audioplay').textContent='Play audio'});
 $('musicvol').addEventListener('input',()=>{
